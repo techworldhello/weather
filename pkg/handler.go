@@ -2,46 +2,61 @@ package weather
 
 import (
 	"encoding/json"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 	"weather/pkg/response"
 	"weather/pkg/weather_services"
 )
 
 type API struct {
-	Services []WeatherService
+	services []WeatherService
+	memo     Cache
+	response response.CustomResponse
+	log      *logrus.Entry
 }
 
-func New() *API { // variadic args in case of more services in future?
+func New(logger *logrus.Entry) *API {
 	return &API{
-		Services: []WeatherService{
-			weather_services.NewWeatherStack("Melbourne"),
-			weather_services.NewOpenWeather("Melbourne"),
+		services: []WeatherService{
+			weather_services.NewWeatherStack(logger),
+			weather_services.NewOpenWeather(logger),
 		},
+		memo: Cache{
+			lastUpdated: time.Now(),
+		},
+		log: logger,
 	}
 }
 
 func (s API) GetWeatherResponse(w http.ResponseWriter, r *http.Request) {
-	// get results from cache, if failure, get primary service
+	param := r.URL.Query()["city"]
+	if len(param) == 0 {
+		s.log.Fatal("You must provide a city query")
+		return
+	}
 
-	// check city requirement
-
-	var response response.CustomResponse
-
-	for _, service := range s.Services {
-		resp, err := service.GetWeatherData()
-		if err == nil {
-			response = resp
-		} else {
-			log.Fatal(err)
+	result, cacheExists := s.memo.processCache()
+	if cacheExists {
+		s.response = result
+		s.log.Info("Using cache..")
+	} else {
+		for _, service := range s.services {
+			resp, err := service.GetWeatherData(param[0])
+			if err == nil {
+				s.response = resp
+				s.memo.saveResponse(resp)
+				break
+			}
 		}
 	}
 
-	b, err := json.Marshal(response)
+	resBytes, err := json.Marshal(&s.response)
 	if err != nil {
-		log.Fatal(err)
+		s.log.Fatal(err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(b)
+	w.Write(resBytes)
 }

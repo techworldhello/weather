@@ -3,5 +3,5 @@ package weather
 import "weather/pkg/response"
 
 type WeatherService interface {
-	GetWeatherData() (w response.CustomResponse, err error)
+	GetWeatherData(city string) (w response.CustomResponse, err error)
 }

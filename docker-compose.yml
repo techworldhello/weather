@@ -1,0 +1,14 @@
+version: "3"
+services:
+  weather:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "4000:4000"
+    environment:
+      - WEATHERSTACK_KEY=ea506498a37292032b031f4837caeca4
+      - OPENWEATHER_KEY=2326504fb9b100bee21400190e4dbe6d
+      - DEPLOYMENT_ENVIRONMENT=staging

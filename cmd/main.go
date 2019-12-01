@@ -1,19 +1,33 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 	"weather/pkg"
+	"weather/pkg/response"
 )
 
+var logger = initLogger("Real-time weather 🌤")
+
 func main() {
-	w := weather.New()
+	w := weather.New(logger)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/weather", w.GetWeatherResponse)
+	mux := mux.NewRouter()
+	mux.HandleFunc("/v1/weather", w.GetWeatherResponse).Methods("GET").Queries("city", "{city}")
+	mux.HandleFunc("/", response.NotFound)
 
-	log.Println("Starting server on :4000...")
-	if err := http.ListenAndServe(":4000", mux); err != nil {
-		log.Fatal(err)
+	logger.Info("Starting server on :3000...")
+	if err := http.ListenAndServe(":3000", mux); err != nil {
+		logger.Fatal(err)
 	}
+}
+
+func initLogger(name string) *logrus.Entry {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	return logrus.WithFields(logrus.Fields{
+		"app_name": name,
+		"environment": os.Getenv("DEPLOYMENT_ENVIRONMENT"),
+	})
 }
