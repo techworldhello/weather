@@ -2,12 +2,13 @@ package weather_services
 
 import (
 	"log"
+	"net/http"
 	"testing"
+	"weather/pkg/mock"
 )
 
-func TestGetWeatherResponseWorks(t *testing.T) {
+func _TestGetWeatherResponseWorks(t *testing.T) {
 	w := WeatherStack{
-
 
 	}
 	resp, err := w.GetWeatherData("Melbourne")
@@ -17,8 +18,8 @@ func TestGetWeatherResponseWorks(t *testing.T) {
 	log.Print("response: ", resp)
 }
 
-func TestGetWeatherResponse(t *testing.T) {
-	w := NewWeatherStack()
+func TestGetWeatherResponseREAL(t *testing.T) {
+	w := NewWeatherStack(mock.TestLogger, &http.Client{})
 	resp, err := w.GetWeatherData("Melbourne")
 	if err != nil {
 		t.Errorf("error getting data: %v", err)

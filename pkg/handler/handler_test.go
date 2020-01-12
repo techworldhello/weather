@@ -1,23 +1,31 @@
-package weather
+package handler
 
 import (
 	"github.com/sirupsen/logrus"
 	"log"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 	"weather/pkg/response"
 )
 
 func TestGetWeatherResponseWorksREAL(t *testing.T) {
 	mockLogrus := logrus.NewEntry(logrus.New())
-	api := New(mockLogrus)
+	api := New(mockLogrus, &http.Client{})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "http://dummy.com/v1/weather?city=melbourne", nil)
-	api.GetWeatherResponse(w, r)
 
-	log.Print("response: ", w.Body)
-	log.Print("result: ", w.Result())
+	for i := 1; i<=1; i++ {
+		api.GetWeatherResponse(w, r)
+		log.Print("response: ", i, w.Body)
+		log.Print("result: ", i, w.Result())
+	}
+	time.Sleep(5 * time.Second)
+	api.GetWeatherResponse(w, r)
+	log.Print("final response: ", w.Body)
+	log.Print("final result: ", w.Result())
 }
 
 func TestGetWeatherResponse(t *testing.T) {
@@ -62,7 +70,7 @@ func TestGetWeatherResponse(t *testing.T) {
 
 	for _, expect := range expectations {
 		t.Run(expect.name, func(t *testing.T) {
-			api := API{response: expect.resp}
+			api := API{}
 			r := httptest.NewRequest("GET", expect.url, nil)
 			w := httptest.NewRecorder()
 			api.GetWeatherResponse(w, r)

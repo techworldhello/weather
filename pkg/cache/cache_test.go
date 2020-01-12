@@ -1,4 +1,4 @@
-package weather
+package cache
 
 import (
 	"testing"
@@ -7,8 +7,8 @@ import (
 )
 
 func TestCacheDoesNotExist(t *testing.T) {
-	c := Cache{lastUpdated: time.Now().Local().Add(5 * time.Second)}
-	resp, cacheExists := c.processCache()
+	c := Cache{LastUpdated: time.Now().Local().Add(5 * time.Second)}
+	resp, cacheExists := c.Get("weather")
 	if cacheExists {
 		t.Error("cache should not exist (lastUpdated exceeds 3 seconds)")
 	}
@@ -19,19 +19,20 @@ func TestCacheDoesNotExist(t *testing.T) {
 }
 
 func TestCacheExists(t *testing.T) {
-	cr := response.CustomResponse{
+	cached := make(map[string]response.CustomResponse)
+	cached["weather"] = response.CustomResponse{
 		Temperature: 20,
 		WindSpeed: 10,
 	}
 	c := Cache{
-		lastUpdated: time.Now(),
-		CustomResponse: cr,
+		LastUpdated: time.Now(),
+		data: cached,
 	}
-	resp, cacheExists := c.processCache()
+	resp, cacheExists := c.Get("weather")
 	if !cacheExists {
 		t.Error("cache should exist but doesn't")
 	}
-	if resp != cr {
+	if resp != cached["weather"] {
 		t.Error("cache should hold an existing response")
 	}
 }

@@ -8,17 +8,16 @@ import (
 )
 
 type WeatherStack struct {
-	http   http.Client
+	http   HttpClient
 	apiKey string
-	schema response.WeatherStackResponse
-	log   *logrus.Entry
+	log    *logrus.Entry
 }
 
-func NewWeatherStack(logger *logrus.Entry) *WeatherStack {
+func NewWeatherStack(logger *logrus.Entry, client HttpClient) *WeatherStack {
 	return &WeatherStack{
-		http:   http.Client{}, // TODO: how to mock in test without interfacing do??
+		http:   client,
 		apiKey: "ea506498a37292032b031f4837caeca4",
-		log: logger,
+		log:    logger,
 	}
 }
 
@@ -28,6 +27,7 @@ func (w WeatherStack) GetWeatherData(city string) (r response.CustomResponse, er
 		w.log.Fatalf("error creating new request: %v", err)
 		return r, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	q := req.URL.Query()
 	q.Add("access_key", w.apiKey)
@@ -36,6 +36,7 @@ func (w WeatherStack) GetWeatherData(city string) (r response.CustomResponse, er
 	w.log.Debugf("query params: %v", q)
 
 	res, err := w.http.Do(req)
+	logrus.Printf("err: %v", err)
 	if err != nil {
 		w.log.Fatalf("error making GET request: %v", err)
 		return r, err
@@ -47,14 +48,17 @@ func (w WeatherStack) GetWeatherData(city string) (r response.CustomResponse, er
 		return r, err
 	}
 
-	// TODO: why doesnt it error out with the schema is different (error response)
-	if err := json.NewDecoder(res.Body).Decode(&w.schema); err != nil {
-		w.log.Fatalf("error decoding json: %v", err)
+	var schema *response.WeatherStackResponse
+
+	dec := json.NewDecoder(res.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&schema); err != nil {
+		w.log.Errorf("1st error decoding json: %v", err)
 		return r, err
 	}
 
 	return response.CustomResponse{
-		Temperature: w.schema.Current.Temperature,
-		WindSpeed:   w.schema.Current.WindSpeed,
+		Temperature: schema.Current.Temperature,
+		WindSpeed:   schema.Current.WindSpeed,
 	}, nil
 }
