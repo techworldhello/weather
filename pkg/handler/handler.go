@@ -13,6 +13,7 @@ import (
 type API struct {
 	services []weather_services.WeatherService
 	log      *logrus.Entry
+	cache    *cache.Cache
 }
 
 func New(logger *logrus.Entry, client weather_services.HttpClient) *API {
@@ -21,7 +22,8 @@ func New(logger *logrus.Entry, client weather_services.HttpClient) *API {
 			weather_services.NewWeatherStack(logger, client),
 			weather_services.NewOpenWeather(logger, client),
 		},
-		log: logger,
+		log:   logger,
+		cache: cache.New(3 * time.Second),
 	}
 }
 
@@ -34,18 +36,18 @@ func (s API) GetWeatherResponse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var customResp *response.CustomResponse
-	cache := cache.New(3 * time.Second) // cache is instantiated each time which clears out any existing cache
+	cityQueried := param[0]
 
-	result, cacheExists := cache.Get("weather")
+	result, cacheExists := s.cache.Get(cityQueried)
 	if cacheExists {
 		customResp = &result
 		s.log.Info("Using cache...")
 	} else {
 		for _, service := range s.services {
-			resp, err := service.GetWeatherData(param[0])
+			resp, err := service.GetWeatherData(cityQueried)
 			if err == nil {
 				customResp = &resp
-				cache.Add("weather", resp)
+				s.cache.Add(cityQueried, resp)
 				break
 			}
 		}

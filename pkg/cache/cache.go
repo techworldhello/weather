@@ -9,55 +9,47 @@ import (
 
 type Cache struct {
 	data        map[string]response.CustomResponse
-	LastUpdated time.Time
+	LastUpdated map[string]time.Time
 	TTL         time.Duration
 	mu          sync.RWMutex
 }
 
 func New(expiration time.Duration) *Cache {
-	//cached := make(map[string]response.CustomResponse)
-	//cached["weather"] = response.CustomResponse{
-	//	Temperature: 20,
-	//	WindSpeed: 10,
-	//}
-	return &Cache{
-		TTL: expiration,
-		//data: cached,
-	}
+	return &Cache{TTL: expiration}
 }
 
-func (c *Cache) Get(key string) (response.CustomResponse, bool) { // TODO: add mutex so 2 request cant write to cache at the same time
-	log.Printf("data to get: %v", c.data["weather"])
+func (c *Cache) Get(key string) (response.CustomResponse, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	if !c.isExpired() && len(c.data) != 0 {
+	if !c.isExpired(key) && len(c.data) != 0 {
 		return c.data[key], true
 	}
 	log.Print("cache empty")
 	return c.data[key], false
 }
 
-func (c *Cache) isExpired() bool {
-	elapsed := time.Since(c.LastUpdated)
-	log.Printf("elapsed %v", elapsed*time.Second)
+func (c *Cache) isExpired(key string) bool {
+	elapsed := time.Since(c.LastUpdated[key])
+	log.Printf("elapsed %v seconds", elapsed / time.Second)
 	if c.TTL > 0 {
-		log.Printf("returned %v", c.TTL <= elapsed*time.Second)
-		return c.TTL <= elapsed*time.Second // 3 < 5
+		return c.TTL <= elapsed
 	}
 	return false
 }
 
 func (c *Cache) Add(key string, resp response.CustomResponse) {
 	c.mu.Lock()
-	if c.data == nil {
+	defer c.mu.Unlock()
+
+	if c.data == nil || c.LastUpdated == nil {
 		c.data = make(map[string]response.CustomResponse)
+		c.LastUpdated = make(map[string]time.Time)
 	}
 	c.data[key] = resp
+	c.LastUpdated[key] = time.Now()
 
 	log.Printf("data added %v", c.data[key])
-	c.LastUpdated = time.Now()
-	c.mu.Unlock()
 }
 
 func (c *Cache) Clear() {

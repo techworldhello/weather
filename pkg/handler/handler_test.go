@@ -17,7 +17,7 @@ func TestGetWeatherResponseWorksREAL(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "http://dummy.com/v1/weather?city=melbourne", nil)
 
-	for i := 1; i<=1; i++ {
+	for i := 1; i<=5; i++ {
 		api.GetWeatherResponse(w, r)
 		log.Print("response: ", i, w.Body)
 		log.Print("result: ", i, w.Result())
