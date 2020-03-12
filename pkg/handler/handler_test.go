@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+	"weather/pkg/cache"
 	"weather/pkg/response"
 )
 
@@ -70,16 +71,15 @@ func TestGetWeatherResponse(t *testing.T) {
 
 	for _, expect := range expectations {
 		t.Run(expect.name, func(t *testing.T) {
-			api := API{}
+		time.Sleep(1 * time.Second)
+			api := API{cache: &cache.Cache{}}
 			r := httptest.NewRequest("GET", expect.url, nil)
 			w := httptest.NewRecorder()
 			api.GetWeatherResponse(w, r)
 
-			log.Print("response: ", w.Body)
+			log.Print("response: ", w.Body.String())
 			log.Print("result: ", w.Result())
-			//if w.Body != expect.resp {
-			//
-			//}
+
 			if w.Result().StatusCode != 200 {
 				t.Error("expected a 200 OK response")
 			}

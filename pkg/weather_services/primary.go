@@ -53,7 +53,7 @@ func (w WeatherStack) GetWeatherData(city string) (r response.CustomResponse, er
 	dec := json.NewDecoder(res.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&schema); err != nil {
-		w.log.Errorf("1st error decoding json: %v", err)
+		w.log.Errorf("error decoding json: %v", err)
 		return r, err
 	}
 

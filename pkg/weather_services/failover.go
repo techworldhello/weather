@@ -54,7 +54,7 @@ func (o OpenWeather) GetWeatherData(city string) (w response.CustomResponse, err
 	dec := json.NewDecoder(res.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&schema); err != nil {
-		o.log.Errorf("2nd error decoding json: %v", err)
+		o.log.Errorf("error decoding json: %v", err)
 		return w, err
 	}
 
