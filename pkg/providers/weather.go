@@ -1,4 +1,4 @@
-package weather_services
+package providers
 
 import (
 	"weather/pkg/response"

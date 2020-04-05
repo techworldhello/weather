@@ -72,5 +72,3 @@ func TestCache(t *testing.T) {
 		})
 	}
 }
-
-// look for deadlock, thread safety

@@ -7,20 +7,20 @@ import (
 	"time"
 	"weather/pkg/cache"
 	"weather/pkg/response"
-	"weather/pkg/weather_services"
+	"weather/pkg/providers"
 )
 
 type API struct {
-	services []weather_services.WeatherService
+	services []providers.WeatherService
 	log      *logrus.Entry
 	cache    *cache.Cache
 }
 
-func New(logger *logrus.Entry, client weather_services.HttpClient) *API {
+func New(logger *logrus.Entry, client providers.HttpClient) *API {
 	return &API{
-		services: []weather_services.WeatherService{
-			weather_services.NewWeatherStack(logger, client),
-			weather_services.NewOpenWeather(logger, client),
+		services: []providers.WeatherService{
+			providers.NewWeatherStack(logger, client),
+			providers.NewOpenWeather(logger, client),
 		},
 		log:   logger,
 		cache: cache.New(3 * time.Second),
@@ -31,7 +31,7 @@ func (s API) GetWeatherResponse(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query()["city"]
 	if len(param) == 0 {
 		s.log.Error("No city query in request")
-		response.InvalidRequest(w) // look into middleware
+		response.InvalidRequest(w)
 		return
 	}
 
@@ -55,6 +55,7 @@ func (s API) GetWeatherResponse(w http.ResponseWriter, r *http.Request) {
 
 	if customResp == nil {
 		response.ServerError(w)
+		return
 	}
 
 	resBytes, err := json.Marshal(customResp)

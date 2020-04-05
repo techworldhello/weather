@@ -1,4 +1,4 @@
-package weather_services
+package providers
 
 import (
 	"encoding/json"
@@ -7,19 +7,18 @@ import (
 	"github.com/sirupsen/logrus"
 	"math"
 	"net/http"
+	"os"
 	"weather/pkg/response"
 )
 
 type OpenWeather struct {
 	http   HttpClient
-	apiKey string
 	log    *logrus.Entry
 }
 
 func NewOpenWeather(logger *logrus.Entry, client HttpClient) *OpenWeather {
 	return &OpenWeather{
 		http:   client,
-		apiKey: "2326504fb9b100bee21400190e4dbe6d",
 		log:    logger,
 	}
 }
@@ -33,16 +32,16 @@ func (o OpenWeather) GetWeatherData(city string) (w response.CustomResponse, err
 
 	q := req.URL.Query()
 	q.Add("q", city+",AU")
-	q.Add("appid", o.apiKey)
+	q.Add("appid", os.Getenv("OPENWEATHER_KEY"))
 	req.URL.RawQuery = q.Encode()
 	o.log.Debugf("query params: %v", q)
 
 	res, err := o.http.Do(req)
+	defer res.Body.Close()
 	if err != nil {
 		o.log.Errorf("error making GET request: %v", err)
 		return w, err
 	}
-	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		o.log.Debugf("resp status code: %d", res.StatusCode)
@@ -51,10 +50,8 @@ func (o OpenWeather) GetWeatherData(city string) (w response.CustomResponse, err
 
 	var schema response.OpenWeatherResponse
 
-	dec := json.NewDecoder(res.Body)
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&schema); err != nil {
-		o.log.Errorf("error decoding json: %v", err)
+	if err := json.NewDecoder(res.Body).Decode(&schema); err != nil {
+		o.log.Errorf("error decoding response: %v", err)
 		return w, err
 	}
 
