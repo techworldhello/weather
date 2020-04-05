@@ -2,9 +2,12 @@
 
 A single-protocol weather API that returns a simple weather response from a number of backend weather providers.
 
-#### To get started, run:
+#### To get started:
 
-```docker-compose up```
+* Add API key values to .env file
+
+* Run ```docker-compose up``` to spin up the server
+
 
 The service is now running on `https://localhost:8080/v1/weather?city=melbourne`
 
@@ -28,4 +31,3 @@ TODO: Dockerise test files ^
 
 * Middleware to catch errors can be implemented to abstract the in-code error handling and improve readability
 
-* Go routines can make requests against weather providers more performant as the application scales

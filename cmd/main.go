@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	var logger = initLogger("Real-time weather 🌤")
+	var logger = initLogger("Weather App🌤")
 	w := handler.New(logger, &http.Client{})
 
 	mux := mux.NewRouter()
