@@ -1,4 +1,4 @@
-# Real-time Weather
+# Weather API demo
 
 A single-protocol weather API that returns a simple weather response from a number of backend weather providers.
 
@@ -6,16 +6,16 @@ A single-protocol weather API that returns a simple weather response from a numb
 
 * Add API key values to .env file
 
-* Run ```docker-compose up``` to spin up the server
+* To spin up the server
+
+```$ docker-compose up weather``` 
 
 
 The service is now running on `https://localhost:8080/v1/weather?city=melbourne`
 
 #### Running tests:
 
-```go test ./...```
-
-TODO: Dockerise test files ^
+```$ docker-compose up test```
 
 ## Features
 

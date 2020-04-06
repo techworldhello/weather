@@ -3,12 +3,16 @@ services:
   weather:
     build:
       context: .
-      dockerfile: Dockerfile
+    command: ['go', 'run', 'cmd/main']
     volumes:
       - .:/app
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - WEATHERSTACK_KEY=${WEATHERSTACK_KEY}
       - OPENWEATHER_KEY=${OPENWEATHER_KEY}
       - DEPLOYMENT_ENVIRONMENT=staging
+  test:
+    build:
+      context: .
+    command: ['go', 'test', './...', '-v', '-race', '-cover']
